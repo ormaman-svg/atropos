@@ -1,0 +1,39 @@
+{
+  "name": "atropos",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "db:start": "./scripts/pg-dev.sh start",
+    "db:stop": "./scripts/pg-dev.sh stop",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "test": "vitest run",
+    "worker": "tsx src/worker/index.ts"
+  },
+  "//overrides": "postcss and sharp arrive as Next transitives with open high-severity advisories (GHSA-qx2v-qp2m-jg93, GHSA-6g55-p6wh-862q, GHSA-r28c-9q8g-f849, GHSA-f88m-g3jw-g9cj). The patched versions are pinned here because `npm audit fix --force` resolves them by downgrading Next to v9. Drop these once a stable Next ships the fixed ranges.",
+  "overrides": {
+    "postcss": "^8.5.23",
+    "sharp": "^0.35.3"
+  },
+  "dependencies": {
+    "next": "^16.2.12",
+    "pg": "^8.22.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.10",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.1",
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.10"
+  }
+}

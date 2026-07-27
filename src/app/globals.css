@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens, lifted verbatim from design/rigel-console.html.
+ *
+ * The console is the source of truth for this palette. Values here must match
+ * it exactly — if a colour needs to change, change it in both places in the
+ * same commit, or the port stops being checkable against the reference.
+ *
+ * The governing idea: light instrument panel, not a dark SOC dashboard. The
+ * graph is the ONLY dark surface. Bold in one place, quiet everywhere else.
+ */
+@theme {
+  /* --- surfaces and text (the light instrument panel) --- */
+  --color-paper: #f2f4f6;
+  --color-card: #ffffff;
+  --color-ink: #0e1319;
+  --color-ink-2: #4a5563;
+  --color-ink-3: #8b96a5;
+  --color-rule: #dce1e7;
+
+  /* --- accents --- */
+  --color-navy: #1b3a5c; /* structure, primary action */
+  --color-crimson: #b3123f; /* a live path */
+  --color-star: #e0a526; /* the choke point. Used once per view. */
+  --color-green: #0f7a5a; /* resolved, reversible, healthy */
+
+  /* --- the sky panel: the one dark surface --- */
+  --color-sky: #0f1e33;
+  --color-sky-2: #16294420;
+  --color-sky-edge: #0a1524; /* panel border */
+  --color-sky-line: #3e5b82; /* default edge stroke, default node fill */
+  --color-sky-line-cut: #2a3e5a; /* an edge that has been cut */
+  --color-sky-label: #7c93b3;
+  --color-sky-coord: #5a7093;
+  --color-sky-node-label: #93a9c6;
+  --color-sky-node-sub: #5f779a;
+
+  /* --- node states inside the sky panel --- */
+  --color-node-hot-text: #e9f0f8;
+  --color-node-hot-ring: #ff5c86;
+  --color-node-choke-ring: #ffd98a;
+  --color-node-choke-text: #ffe6b0;
+  --color-node-fixed-ring: #4fd1a5;
+
+  /* --- incidental --- */
+  --color-diff-bg: #fafbfc;
+  --color-navy-hover: #24507e;
+  --color-navy-ghost-hover: #edf1f6;
+
+  /* --- type --- */
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
