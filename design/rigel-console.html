@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rigel — Agent Attack Paths</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F4F6;
+  --card:#FFFFFF;
+  --ink:#0E1319;
+  --ink-2:#4A5563;
+  --ink-3:#8B96A5;
+  --rule:#DCE1E7;
+  --sky:#0F1E33;
+  --sky-2:#16294420;
+  --navy:#1B3A5C;
+  --crimson:#B3123F;
+  --star:#E0A526;
+  --green:#0F7A5A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Archivo',system-ui,sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'IBM Plex Mono',monospace}
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:500;
+}
+
+/* ---------- shell ---------- */
+.shell{display:flex;flex-direction:column;min-height:100vh}
+
+header.bar{
+  display:flex;align-items:center;gap:24px;
+  padding:14px 24px;background:var(--card);
+  border-bottom:1px solid var(--rule);
+}
+.brand{display:flex;align-items:center;gap:11px}
+.brand h1{
+  font-size:15px;font-weight:700;letter-spacing:.10em;text-transform:uppercase;
+}
+.sources{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.src{
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+  padding:4px 9px;border:1px solid var(--rule);border-radius:2px;
+  color:var(--ink-2);background:var(--paper);white-space:nowrap;
+}
+.src b{color:var(--green);font-weight:600}
+.scanline{
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-3);
+}
+
+/* ---------- layout ---------- */
+.grid{
+  flex:1;display:grid;
+  grid-template-columns:308px minmax(0,1fr);
+  gap:1px;background:var(--rule);
+}
+.col{background:var(--paper);min-width:0}
+
+/* ---------- path list ---------- */
+.panel-head{
+  padding:16px 20px 12px;border-bottom:1px solid var(--rule);background:var(--card);
+}
+.panel-head h2{font-size:13px;font-weight:600;letter-spacing:.01em}
+.panel-head p{font-size:12px;color:var(--ink-2);margin-top:3px}
+
+.paths{padding:10px;display:flex;flex-direction:column;gap:8px}
+.path{
+  width:100%;text-align:left;cursor:pointer;
+  background:var(--card);border:1px solid var(--rule);border-left:2px solid var(--crimson);
+  border-radius:3px;padding:12px 13px;
+  font-family:inherit;font-size:13px;color:var(--ink);
+  transition:border-color .14s, box-shadow .14s, opacity .3s, transform .3s;
+}
+.path:hover{border-color:var(--ink-3)}
+.path[aria-selected="true"]{
+  border-color:var(--navy);border-left-color:var(--crimson);
+  box-shadow:0 0 0 1px var(--navy);
+}
+.path:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+.path .row1{display:flex;align-items:baseline;gap:8px;margin-bottom:5px}
+.path .id{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-3)}
+.path .sev{
+  margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;
+  color:var(--crimson);font-weight:600;letter-spacing:.04em;
+}
+.path .title{font-weight:600;font-size:13px;line-height:1.35;display:block;margin-bottom:6px}
+.path .chain{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-2);line-height:1.6}
+.path.resolved{opacity:.38;border-left-color:var(--green)}
+.path.resolved .sev{color:var(--green)}
+
+/* ---------- constellation ---------- */
+.chart-wrap{padding:16px}
+.chart{
+  background:var(--sky);border-radius:4px;position:relative;overflow:hidden;
+  border:1px solid #0A1524;
+}
+.chart-label{
+  position:absolute;top:14px;left:16px;z-index:2;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:#7C93B3;
+}
+.chart-coord{
+  position:absolute;top:14px;right:16px;z-index:2;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;color:#5A7093;
+}
+svg.sky{display:block;width:100%;height:auto}
+
+.edge{stroke:#3E5B82;stroke-width:1.25;fill:none;transition:stroke .3s,stroke-width .3s,opacity .3s}
+.edge.hot{stroke:var(--crimson);stroke-width:2}
+.edge.dim{opacity:.18}
+.edge.cut{stroke:#2A3E5A;stroke-dasharray:3 4;opacity:.35}
+
+.node circle{transition:all .3s}
+.node text{font-family:'IBM Plex Mono',monospace;font-size:9.5px;fill:#93A9C6}
+.node .n-sub{font-size:8.5px;fill:#5F779A}
+.node.hot circle{fill:#B3123F;stroke:#FF5C86;stroke-width:1.5}
+.node.hot text{fill:#E9F0F8}
+.node.choke circle{fill:var(--star);stroke:#FFD98A;stroke-width:2}
+.node.choke text{fill:#FFE6B0;font-weight:600}
+.node.dim{opacity:.3}
+.node.fixed circle{fill:#0F7A5A;stroke:#4FD1A5;stroke-width:1.5}
+
+.glow{filter:url(#soft)}
+
+/* ---------- remediation ---------- */
+.remed{
+  margin:0 16px 16px;background:var(--card);
+  border:1px solid var(--rule);border-radius:4px;
+}
+.remed-top{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:15px 18px;border-bottom:1px solid var(--rule);flex-wrap:wrap;
+}
+.remed-top .txt{flex:1;min-width:220px}
+.remed-top h3{font-size:14px;font-weight:600;margin-bottom:3px}
+.remed-top p{font-size:12.5px;color:var(--ink-2);line-height:1.5}
+.tier{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;
+  text-transform:uppercase;padding:4px 8px;border-radius:2px;
+  border:1px solid var(--rule);color:var(--ink-2);white-space:nowrap;
+}
+.tier.t3{border-color:var(--green);color:var(--green)}
+
+.diff{
+  margin:0;padding:14px 18px;background:#FAFBFC;border-bottom:1px solid var(--rule);
+  font-family:'IBM Plex Mono',monospace;font-size:11.5px;line-height:1.7;
+  overflow-x:auto;color:var(--ink-2);
+}
+.diff .del{color:var(--crimson)}
+.diff .add{color:var(--green)}
+.diff .cx{color:var(--ink-3)}
+
+.remed-foot{display:flex;align-items:center;gap:12px;padding:13px 18px;flex-wrap:wrap}
+.impact{font-size:12.5px;color:var(--ink-2)}
+.impact b{color:var(--ink);font-weight:600}
+.btns{margin-left:auto;display:flex;gap:8px}
+button.act{
+  font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
+  padding:8px 15px;border-radius:3px;border:1px solid var(--navy);
+  background:var(--navy);color:#fff;transition:background .14s;
+}
+button.act:hover{background:#24507E}
+button.act.ghost{background:transparent;color:var(--navy)}
+button.act.ghost:hover{background:#EDF1F6}
+button.act:focus-visible{outline:2px solid var(--crimson);outline-offset:2px}
+button.act:disabled{opacity:.45;cursor:default}
+
+.audit{
+  padding:11px 18px;border-top:1px solid var(--rule);
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-3);
+  display:flex;gap:8px;align-items:center;
+}
+.audit .dot{width:5px;height:5px;border-radius:50%;background:var(--green);flex:none}
+
+@media (max-width:880px){
+  .grid{grid-template-columns:1fr}
+  .sources{width:100%;margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="bar">
+    <div class="brand">
+      <!-- Orion's belt = a three-hop path -->
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-label="Rigel">
+        <line x1="7" y1="22.5" x2="23" y2="7.5" stroke="#1B3A5C" stroke-width="1.25"/>
+        <circle cx="7" cy="22.5" r="2.6" fill="#1B3A5C"/>
+        <circle cx="15" cy="15" r="2.6" fill="#1B3A5C"/>
+        <circle cx="23" cy="7.5" r="4" fill="#E0A526"/>
+      </svg>
+      <h1>Rigel</h1>
+    </div>
+    <div class="scanline">last scan 40s ago</div>
+    <div class="sources">
+      <span class="src"><b>&#9679;</b> AWS org</span>
+      <span class="src"><b>&#9679;</b> Entra ID</span>
+      <span class="src"><b>&#9679;</b> GitHub</span>
+      <span class="src"><b>&#9679;</b> Snowflake</span>
+      <span class="src">read-only</span>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- ============ ranked paths ============ -->
+    <div class="col">
+      <div class="panel-head">
+        <h2>Exploitable paths</h2>
+        <p><span id="liveCount">3</span> of 47 agents can reach regulated data.</p>
+      </div>
+      <div class="paths" id="pathList" role="listbox" aria-label="Exploitable paths"></div>
+    </div>
+
+    <!-- ============ constellation + remediation ============ -->
+    <div class="col">
+      <div class="chart-wrap">
+        <div class="chart">
+          <div class="chart-label">Agent fabric</div>
+          <div class="chart-coord mono" id="coord">3 paths &middot; 1 choke point</div>
+          <svg class="sky" viewBox="0 0 820 430" role="img" aria-label="Attack path graph">
+            <defs>
+              <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+                <feGaussianBlur stdDeviation="4" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+            </defs>
+            <g id="edges"></g>
+            <g id="nodes"></g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="remed" id="remed">
+        <div class="remed-top">
+          <div class="txt">
+            <h3 id="rTitle">Scope <span class="mono">svc-agent-prod</span> to per-agent identities</h3>
+            <p id="rDesc">One service principal is shared by 9 agents and carries <span class="mono">Storage Blob Data Contributor</span> plus Snowflake <span class="mono">ACCOUNTADMIN</span>. Every path below inherits it.</p>
+          </div>
+          <span class="tier t3" id="rTier">Tier 3 &middot; reversible</span>
+        </div>
+
+        <pre class="diff" id="rDiff"><span class="cx">terraform/identity/agents.tf</span>
+<span class="del">- role_assignment  = "Storage Blob Data Contributor"</span>
+<span class="del">- scope            = "/subscriptions/prod"</span>
+<span class="add">+ role_assignment  = "Storage Blob Data Reader"</span>
+<span class="add">+ scope            = "/subscriptions/prod/rg/agent-sandbox"</span>
+<span class="add">+ identity_per_agent = true</span></pre>
+
+        <div class="remed-foot">
+          <div class="impact" id="rImpact">Collapses <b>14 paths</b> across 9 agents. Rollback available for 30 days.</div>
+          <div class="btns">
+            <button class="act ghost" id="btnPr">Open pull request</button>
+            <button class="act" id="btnApply">Apply fix</button>
+          </div>
+        </div>
+
+        <div class="audit"><span class="dot"></span><span id="rAudit">Executor: deterministic &middot; scoped credential &middot; every action reversible</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const NODES = [
+  {id:'inbox', x:80,  y:70,  r:5,  label:'support@ inbox',   sub:'attacker-writable'},
+  {id:'docs',  x:80,  y:215, r:5,  label:'public docs MCP',  sub:'unauthenticated'},
+  {id:'jira',  x:80,  y:360, r:5,  label:'jira webhook',     sub:'attacker-writable'},
+
+  {id:'a1',    x:275, y:70,  r:6,  label:'triage-agent',     sub:'zendesk'},
+  {id:'a2',    x:275, y:215, r:6,  label:'docs-assistant',   sub:'internal'},
+  {id:'a3',    x:275, y:360, r:6,  label:'release-agent',    sub:'ci'},
+
+  {id:'svc',   x:470, y:215, r:11, label:'svc-agent-prod',   sub:'shared by 9 agents', choke:true},
+
+  {id:'d1',    x:690, y:80,  r:6,  label:'CUSTOMER_PII',     sub:'snowflake'},
+  {id:'d2',    x:690, y:215, r:6,  label:'exports bucket',   sub:'s3'},
+  {id:'d3',    x:690, y:350, r:6,  label:'deploy keys',      sub:'github'}
+];
+
+const EDGES = [
+  {f:'inbox',t:'a1',p:1},{f:'a1',t:'svc',p:1},{f:'svc',t:'d1',p:1},
+  {f:'docs', t:'a2',p:2},{f:'a2',t:'svc',p:2},{f:'svc',t:'d2',p:2},
+  {f:'jira', t:'a3',p:3},{f:'a3',t:'svc',p:3},{f:'svc',t:'d3',p:3}
+];
+
+const PATHS = [
+  {n:1, sev:'CRITICAL', title:'Indirect injection to customer PII',
+   chain:'support@ inbox &rarr; triage-agent &rarr; svc-agent-prod &rarr; CUSTOMER_PII',
+   tag:'ASI01 &middot; AML.T0086'},
+  {n:2, sev:'CRITICAL', title:'Unauthenticated MCP server to export bucket',
+   chain:'public docs MCP &rarr; docs-assistant &rarr; svc-agent-prod &rarr; exports bucket',
+   tag:'ASI03 &middot; AML.T0051'},
+  {n:3, sev:'HIGH', title:'Webhook to production deploy keys',
+   chain:'jira webhook &rarr; release-agent &rarr; svc-agent-prod &rarr; deploy keys',
+   tag:'ASI03 &middot; supply chain'}
+];
+
+let selected = 1, fixed = false;
+const byId = Object.fromEntries(NODES.map(n=>[n.id,n]));
+const $ = s => document.querySelector(s);
+
+function drawGraph(){
+  const eg = $('#edges'), ng = $('#nodes');
+  eg.innerHTML = ''; ng.innerHTML = '';
+
+  EDGES.forEach(e=>{
+    const a = byId[e.f], b = byId[e.t];
+    const mx = (a.x+b.x)/2;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', `M${a.x},${a.y} C${mx},${a.y} ${mx},${b.y} ${b.x},${b.y}`);
+    path.setAttribute('class','edge ' + (fixed ? 'cut' : (e.p===selected ? 'hot' : 'dim')));
+    eg.appendChild(path);
+  });
+
+  NODES.forEach(n=>{
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+    const inPath = EDGES.some(e=>e.p===selected && (e.f===n.id||e.t===n.id));
+    let cls = 'node';
+    if(fixed && n.choke) cls += ' fixed';
+    else if(n.choke) cls += ' choke';
+    else if(fixed) cls += ' dim';
+    else cls += inPath ? ' hot' : ' dim';
+    g.setAttribute('class', cls);
+
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',n.x); c.setAttribute('cy',n.y); c.setAttribute('r',n.r);
+    c.setAttribute('fill','#3E5B82');
+    if(n.choke) c.setAttribute('class','glow');
+    g.appendChild(c);
+
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',n.x); t.setAttribute('y',n.y - n.r - 11);
+    t.setAttribute('text-anchor','middle'); t.textContent = n.label;
+    g.appendChild(t);
+
+    const s = document.createElementNS('http://www.w3.org/2000/svg','text');
+    s.setAttribute('x',n.x); s.setAttribute('y',n.y + n.r + 15);
+    s.setAttribute('text-anchor','middle'); s.setAttribute('class','n-sub');
+    s.textContent = n.sub;
+    g.appendChild(s);
+
+    ng.appendChild(g);
+  });
+}
+
+function drawPaths(){
+  $('#pathList').innerHTML = PATHS.map(p=>`
+    <button class="path ${fixed?'resolved':''}" role="option"
+            aria-selected="${!fixed && p.n===selected}" data-n="${p.n}">
+      <span class="row1">
+        <span class="id">PATH-0${p.n}</span>
+        <span class="sev">${fixed?'RESOLVED':p.sev}</span>
+      </span>
+      <span class="title">${p.title}</span>
+      <span class="chain">${p.chain}</span>
+      <span class="chain" style="color:var(--ink-3)">${p.tag}</span>
+    </button>`).join('');
+
+  document.querySelectorAll('.path').forEach(el=>{
+    el.addEventListener('click',()=>{
+      if(fixed) return;
+      selected = +el.dataset.n;
+      drawPaths(); drawGraph();
+    });
+  });
+}
+
+function applyFix(){
+  fixed = true;
+  $('#rTitle').textContent = 'Fix applied — svc-agent-prod scoped';
+  $('#rDesc').innerHTML = 'Nine agents now hold per-agent identities with read-only scope. Re-scan confirmed no remaining path to regulated data.';
+  $('#rTier').textContent = 'Applied 3s ago';
+  $('#rImpact').innerHTML = '<b>14 paths</b> collapsed. Snapshot <span class="mono">rb-8841</span> retained 30 days.';
+  $('#rAudit').textContent = 'Executor: deterministic · action rev-scope-role · reversible · signed to audit log';
+  $('#coord').textContent = '0 paths · resolved';
+  $('#liveCount').textContent = '0';
+  $('#btnApply').textContent = 'Roll back';
+  $('#btnPr').disabled = true;
+  drawPaths(); drawGraph();
+}
+
+function rollback(){
+  fixed = false;
+  $('#rTitle').innerHTML = 'Scope <span class="mono">svc-agent-prod</span> to per-agent identities';
+  $('#rDesc').innerHTML = 'One service principal is shared by 9 agents and carries <span class="mono">Storage Blob Data Contributor</span> plus Snowflake <span class="mono">ACCOUNTADMIN</span>. Every path below inherits it.';
+  $('#rTier').textContent = 'Tier 3 · reversible';
+  $('#rImpact').innerHTML = 'Collapses <b>14 paths</b> across 9 agents. Rollback available for 30 days.';
+  $('#rAudit').textContent = 'Executor: deterministic · scoped credential · every action reversible';
+  $('#coord').textContent = '3 paths · 1 choke point';
+  $('#liveCount').textContent = '3';
+  $('#btnApply').textContent = 'Apply fix';
+  $('#btnPr').disabled = false;
+  drawPaths(); drawGraph();
+}
+
+$('#btnApply').addEventListener('click',()=> fixed ? rollback() : applyFix());
+$('#btnPr').addEventListener('click',function(){
+  this.textContent = 'PR #218 opened';
+  setTimeout(()=>{ this.textContent = 'Open pull request'; }, 2400);
+});
+
+drawPaths();
+drawGraph();
+</script>
+</body>
+</html>
