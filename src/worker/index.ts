@@ -9,6 +9,7 @@
  * with no coordination — each claims a different row or none.
  */
 import { getPool, withSystem, withTenant } from "../lib/db.js";
+import { analyse } from "../lib/graph/engine.js";
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 
@@ -42,16 +43,16 @@ async function claimNextScan(): Promise<Claim | null> {
 }
 
 /**
- * Placeholder for the scan body. Step 2 replaces this with connector reads and
- * graph construction; it stays tenant-scoped when it does.
+ * The scan body: enumerate paths, evaluate rules, rank choke points.
+ *
+ * Connector ingestion still has to land in front of this — today the graph is
+ * whatever is already in `node` and `edge`. Analysis over that graph is real.
  */
 async function runScan(scanId: string, client: PoolClient): Promise<void> {
-  const { rows } = await client.query<{ count: string }>(
-    "select count(*)::text as count from connection where status = 'active'",
-  );
+  const summary = await analyse(client, scanId);
   await client.query("update scan set stats = $2 where id = $1", [
     scanId,
-    JSON.stringify({ active_connections: Number(rows[0]?.count ?? 0) }),
+    JSON.stringify(summary),
   ]);
 }
 
