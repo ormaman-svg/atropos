@@ -1,6 +1,44 @@
 # Name + thesis review — round 1
 
-Status: decisions pending founder call. Nothing here is settled.
+Status: resolved. See "Decision" below. The analysis is kept as written,
+including the recommendation that was not taken, so the reasoning stays
+auditable.
+
+## Decision
+
+**Atropos.** The Fate who cuts the thread — her sisters spin and measure it,
+she holds the shears. The meaning maps onto the wedge without explanation:
+not another inventory of what exists, but the one cut that collapses the most
+paths.
+
+Chosen after a 70-domain sweep established that the whole classical register —
+Gordian, Ariadne, Theseus, Nodus, Groma, Dioptra, Occam, Tropos, Limen, Pons,
+Cardo — and the whole celestial register — Mintaka, Alnitak, Alnilam, Lodestar,
+Merak — are registered across `.ai` `.io` `.com` `.co` `.dev`. Most are parked
+rather than used, so the register is purchasable, not closed.
+
+Open items carried forward, neither blocking the build:
+
+- **Domain.** `atropos.*` is parked across TLDs. Broker approach required;
+  expect low-to-mid four figures.
+- **Trademark.** Atropos Health (Stanford spinout, real-world clinical
+  evidence) exists in a different class. Worth a formal opinion before the
+  name goes on anything public.
+
+Rejected on collision grounds, recorded so they don't get re-proposed:
+**Horizon** (Horizon3.ai — $100M raised, ~6,400 customers, positioned as
+"prove what an attacker could reach", plus five more security entities on the
+word) and **Orion** (Orion Security — $32M Series A, Feb 2026, IBM
+participating, AI-driven DLP; and SolarWinds Orion, which owns that phrase in
+every CISO's memory).
+
+Names verified available during the sweep, if the domain acquisition stalls
+and a fallback is needed: `cutpath.ai`, `tarjan.ai`, `mincut.ai`,
+`hopcount.ai`, `bivium.ai`, plus `cutset.co` / `.dev` / `.sh`.
+
+The mark survives the rename unchanged: three dots on a diagonal, one gold
+`#E0A526` stroke crossing them at the point they align. Path, then cut.
+*Atropos* says in Greek what the mark says in geometry.
 
 ---
 
